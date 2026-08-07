@@ -1,6 +1,7 @@
 # +++ Modified By Yato [telegram username: @i_killed_my_clan & @ProYato] +++ # aNDI BANDI SANDI JISNE BHI CREDIT HATAYA USKI BANDI RAndi 
 import os
 import asyncio
+import base64
 from config import *
 from pyrogram import Client, filters
 from pyrogram.types import Message, User, ChatJoinRequest, InlineKeyboardMarkup, InlineKeyboardButton
@@ -48,13 +49,22 @@ async def autoapprove(client, message: ChatJoinRequest):
         # User is not a member, handle accordingly
         pass
 
-    await client.approve_chat_join_request(chat_id=chat.id, user_id=user.id)
+        await client.approve_chat_join_request(chat_id=chat.id, user_id=user.id)
     
     if APPROVED == "on":
-        invite_link = await client.export_chat_invite_link(chat.id)
+        # চ্যাটের আসল আইডিটি স্ট্রিং হিসেবে নেওয়া হলো (যেমন: -1003584836363)
+        chat_id_str = str(chat.id)
+        
+        # আইডিটিকে Base64 এ কনভার্ট করে শেষের '=' চিহ্ন (প্যাডিং) সরিয়ে দেওয়া হলো
+        encoded_id = base64.urlsafe_b64encode(chat_id_str.encode('ascii')).decode('ascii').rstrip('=')
+        
+        # আপনার লিংকের ফরম্যাট অনুযায়ী অটোমেটিক লিংক তৈরি
+        # (এখানে queenlinksbot এর জায়গায় চাইলে আপনার বটের ইউজারনেমও দিতে পারেন)
+        dynamic_link = f"https://t.me/queenlinksbot?start=req_{encoded_id}"
+
         buttons = [
             [InlineKeyboardButton('• ᴊᴏɪɴ ᴍʏ ᴜᴘᴅᴀᴛᴇs •', url='https://t.me/koreandrama006')],
-            [InlineKeyboardButton(f'• ᴊᴏɪɴ {chat.title} •', url=invite_link)]
+            [InlineKeyboardButton(f'• ᴊᴏɪɴ {chat.title} •', url=dynamic_link)]
         ]
         markup = InlineKeyboardMarkup(buttons)
         caption = f"<b>ʜᴇʏ {user.mention()},\n\n<blockquote> ʏᴏᴜʀ ʀᴇǫᴜᴇsᴛ ᴛᴏ ᴊᴏɪɴ _{chat.title} ʜᴀs ʙᴇᴇɴ ᴀᴘᴘʀᴏᴠᴇᴅ.</blockquote> </b>"
@@ -65,6 +75,7 @@ async def autoapprove(client, message: ChatJoinRequest):
             caption=caption,
             reply_markup=markup
         )
+
 
 @Client.on_message(filters.command("reqtime") & is_owner_or_admin)
 async def set_reqtime(client, message: Message):
